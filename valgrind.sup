@@ -1,0 +1,249 @@
+{
+   getdelim-potash
+   Memcheck:Leak
+   fun:malloc
+   fun:getdelim
+   obj:/lib/libselinux.so.1
+   obj:/lib/libselinux.so.1
+   obj:/lib/libselinux.so.1
+}
+{
+   cairo-crc32-uninit
+   Memcheck:Value8
+   fun:crc32
+   obj:/lib/libpng12.so.0.42.0
+   fun:png_write_chunk
+   obj:/lib/libpng12.so.0.42.0
+   obj:/lib/libpng12.so.0.42.0
+   obj:/lib/libpng12.so.0.42.0
+   obj:/lib/libpng12.so.0.42.0
+   fun:png_write_row
+   fun:png_write_image
+	...
+}
+{
+   cairo-write-uninitialised
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   fun:_IO_file_write@@GLIBC_2.2.5
+   fun:_IO_do_write@@GLIBC_2.2.5
+   fun:_IO_file_close_it@@GLIBC_2.2.5
+   fun:fclose@@GLIBC_2.2.5
+   fun:cairo_surface_write_to_png
+   ...
+}
+{
+	glib-homedir-leaks
+   Memcheck:Leak
+	...
+   fun:g_get_home_dir
+	...
+}
+{
+   freetype-leak1
+   Memcheck:Leak
+	...
+   fun:FT_Open_Face
+   fun:FT_New_Face
+   ...
+}
+{
+   cairo-font-leak1
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:cairo_toy_font_face_create
+   ...
+}
+{
+   cairo-font-leak2
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:FcPatternGet
+   fun:FcPatternGetFTFace
+   ...
+   fun:cairo_scaled_font_create
+   ...
+}
+{
+   cairo-font-leak3
+   Memcheck:Leak
+   fun:calloc
+   fun:pixman_image_create_bits
+   ...
+}
+{
+   freetype-leak2
+   Memcheck:Leak
+   fun:malloc
+   fun:ft_mem_qalloc
+   fun:ft_mem_alloc
+   fun:ft_mem_qrealloc
+   fun:ft_mem_realloc
+   ...
+   fun:FT_Load_Glyph
+   ...
+}
+{
+   glib-setcontents-leak1
+   Memcheck:Leak
+   fun:malloc
+	...
+   fun:g_get_filename_charsets
+   fun:g_filename_display_name
+   fun:g_file_set_contents
+   ...
+}
+{
+   glib-setcontents-leak2
+   Memcheck:Leak
+   fun:realloc
+	...
+   fun:g_get_filename_charsets
+   fun:g_filename_display_name
+   fun:g_file_set_contents
+   ...
+}
+{
+   fontconfig-leak1
+   Memcheck:Leak
+   fun:malloc
+	...
+   fun:XML_ParseBuffer
+	...
+   fun:FcConfigParseAndLoad
+   ...
+}
+{
+   fontconfig-leak2
+   Memcheck:Leak
+   fun:realloc
+	...
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+   fun:FcConfigParseAndLoad
+   ...
+}
+{
+   glib-log-leak1
+   Memcheck:Leak
+   fun:malloc
+	...
+   fun:g_get_charset
+   fun:g_log_default_handler
+   fun:g_logv
+   fun:g_log
+   ...
+}
+{
+   glib-log-leak2
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   ...
+   fun:g_get_charset
+   fun:g_log_default_handler
+   fun:g_logv
+   fun:g_log
+   ...
+}
+{
+   glib-setcontents-leak2
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_get_filename_charsets
+   fun:g_filename_display_name
+   fun:g_file_set_contents
+   ...
+}
+{
+	cairo-font-leak4
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:cairo_scaled_font_create
+   ...
+}
+{
+	fontconfig-leak2
+   Memcheck:Leak
+   fun:malloc
+	...
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+   fun:FcConfigParseAndLoad
+   obj:/usr/lib/libfontconfig.so.1.4.4
+   ...
+}
+{
+   fontconfig-leak3
+   Memcheck:Leak
+   fun:malloc
+   fun:FcBlanksCreate
+   ...
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+   fun:FcInitLoadConfig
+   fun:FcInitLoadConfigAndFonts
+   fun:FcInit
+   ...
+}
+{
+   fontconfig-leak8
+   Memcheck:Leak
+   fun:malloc
+   fun:FcFontSetCreate
+   fun:FcConfigBuildFonts
+   fun:FcInitLoadConfigAndFonts
+   fun:FcInit
+   fun:FcConfigGetCurrent
+   fun:FcConfigSubstituteWithPat
+   ...
+}
+{
+   fontconfig-leak6
+   Memcheck:Leak
+   fun:malloc
+	...
+   fun:FcStrSetAddFilename
+   ...
+}
+{
+   fontconfig-leak7
+   Memcheck:Leak
+   fun:malloc
+   fun:FcStrCopy
+   fun:FcStrSetAdd
+   fun:FcConfigParseAndLoad
+   ...
+}
+{
+   fontconfig-leak9
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:FcStrSetAddFilename
+	...
+}
+{
+   freetype-leak3
+   Memcheck:Leak
+   fun:malloc
+	...
+   fun:FT_Init_FreeType
+   ...
+}
+{
+   freetype-leak4
+   Memcheck:Leak
+   fun:realloc
+   fun:ft_mem_qrealloc
+   fun:ft_mem_realloc
+	...
+   fun:FT_Load_Glyph
+   ...
+}
+

@@ -6,9 +6,6 @@
 #include "tiles.h"
 #include "layer.h"
 
-typedef void (*potash_stack_compose)(cairo_surface_t *dst,cairo_surface_t *src,
-									   		 int x,int y);
-
 struct potash_stack_el {
 	potash_layer layer;
 	potash_stack_compose compose;

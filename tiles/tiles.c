@@ -86,6 +86,7 @@ potash_tile po_tile_create(potash_tiles ts,int x,int y,int flags,
 	t->constructor=c;
 	t->payload=payload;
 	cache_list_add(t);
+	g_debug("Creating");
 	(t->constructor)(t->tiles,x,y,t->surface,t->surface_data,t->payload);
 	t->type|=(flags&PO_TILE_FLAGS);
 	return t;
@@ -195,6 +196,7 @@ static void po_tile_load(potash_tile t) {
 		g_free(filename);
 		ct=cairo_create(t->surface);
 		cairo_set_source_surface(ct,png,0.0,0.0);
+		cairo_set_operator(ct,CAIRO_OPERATOR_SOURCE);		
 		cairo_paint(ct);
 		cairo_destroy(ct);
 		cairo_surface_destroy(png);
@@ -255,7 +257,7 @@ void po_tile_ref(potash_tile t) {
 
 void po_tile_unref(potash_tile t) {
 	po_tile_unlock(t);
-	if(t->type&PO_TILE_TMP)
+	if(t->type&PO_TILE_TMP || t->type&PO_TILE_VARIABLE)
 		po_tile_unload(t);	
 	prune_cache(t->tiles,t->tiles->cache_size);
 }

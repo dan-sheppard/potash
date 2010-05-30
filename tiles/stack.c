@@ -5,25 +5,14 @@
 #include "layer.h"
 #include "tiles.h"
 #include "tiles_makers.h"
-
-static void fade_alpha(cairo_surface_t *src,guint32 alpha) {
-	cairo_t * cr;
-	
-	cr=cairo_create(src);
-	cairo_set_source_rgba(cr,0.0,0.0,0.0,((double)alpha)/255);
-	cairo_set_operator(cr,CAIRO_OPERATOR_DEST_IN);
-	cairo_rectangle(cr,0.0,0.0,
-						 cairo_image_surface_get_width(src),
-						 cairo_image_surface_get_height(src));
-	cairo_fill(cr);
-	cairo_destroy(cr);
-}
+#include "cairo_util.h"
 
 static void stack_maker(potash_tiles tiles,int x,int y,
 								cairo_surface_t *surface,unsigned char *surface_data,
 								gpointer payload) {
 	potash_stack stack;
 	potash_tile tsrc,tmixed;
+	cairo_surface_t *src;
 	int i;
 	
 	stack=(potash_stack)payload;
@@ -33,8 +22,11 @@ static void stack_maker(potash_tiles tiles,int x,int y,
 		tsrc=po_layer_get_tile(stack->stack[i].layer,x,y);
 		tmixed=po_tile_create(tiles,0,0,PO_TILE_TMP,po_tmaker_copy,
 									 po_tile_surface(tsrc));
-		fade_alpha(po_tile_surface(tmixed),stack->stack[i].alpha);
-		(*stack->stack[i].compose)(surface,po_tile_surface(tmixed),x,y);
+		po_cairo_util_fade_alpha(po_tile_surface(tmixed),stack->stack[i].alpha);
+		src=po_tile_surface(tmixed);
+		(*stack->stack[i].compose)(surface,src,x,y,0,0,0,0,
+											cairo_image_surface_get_width(src),
+											cairo_image_surface_get_height(src));
 		po_layer_put_tile(tsrc);
 		po_tile_unref(tmixed);
 		po_tile_destroy(tmixed);
@@ -49,7 +41,8 @@ potash_stack po_stack_create(potash_tiles tiles) {
 	stack->len=0;
 	stack->size=0;
 	stack->tiles=tiles;
-	stack->layer=po_layer_create(tiles,PO_TILE_SYNTHETIC,stack_maker,stack,0);
+	stack->layer=po_layer_create(tiles,PO_TILE_SYNTHETIC|PO_TILE_VARIABLE,
+										  stack_maker,stack,0);
 	return stack;
 }
 

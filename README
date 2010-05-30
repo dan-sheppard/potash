@@ -1,0 +1,5 @@
+Potash is designed to be software for drawing with computers, somewhat between the traditional Photoshop/GIMP type model and that of the more left-field Alchemy. It also has a bit of Illustrator-fu thrown in.
+
+The core idea is that operations are represented as an append-only stream of events, which are stored in a simple append-only file: these record the movements and co-ordinates of the operations, rather than their effects. In this way it resembles a vector application, however the operations are essentially bitmap ones.
+
+The other major idea is the use of image type presets which pre-encode layers and their interoperation, and tool settings, to allow single keypresses to switch between operations such as drawing, inking, colouring, etc.

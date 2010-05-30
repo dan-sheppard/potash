@@ -1,6 +1,6 @@
 CC=gcc
 OBJS=tiles/tiles.o tiles/layer.o tiles/stack.o tiles/tiles_makers.o \
-	tiles/stack_composers.o confdir/confdir.o main.o
+	tiles/stack_composers.o tiles/cairo_util.o confdir/confdir.o main.o
 CFLAGS=`pkg-config --cflags gtk+-2.0` -g
 LDFLAGS=`pkg-config --libs gtk+-2.0`
 
@@ -28,13 +28,14 @@ profile:
 main.o: tiles/tiles.h tiles/layer.h tiles/stack.h tiles/tiles_makers.h tiles/stack_composers.h confdir/confdir.h
 tiles/tiles.o: tiles/tiles.h tiles/tiles_makers.h
 tiles/layer.h: tiles/tiles.h
-tiles/layer.o: tiles/layer.h
+tiles/layer.o: tiles/layer.h tiles/tiles_makers.h
 tiles/tiles.h: confdir/confdir.h
 tiles/stack.h: tiles/layer.h tiles/tiles.h
-tiles/stack.o: tiles/stack.h tiles/layer.h tiles/tiles.h tiles/tiles_makers.h
+tiles/stack.o: tiles/stack.h tiles/layer.h tiles/tiles.h tiles/tiles_makers.h tiles/cairo_util.h
 tiles/tiles_makers.h: tiles/tiles.h
 tiles/tiles_makers.o: tiles/tiles_makers.h tiles/tiles.h
 tiles/stack_composers.o: tiles/stack_composers.h
+tiles/cairo_util.o: tiles/cairo_util.h
 confdir/confdir.o: confdir/confdir.h
 
 

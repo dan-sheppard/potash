@@ -13,8 +13,9 @@
 #define PO_TILE_TYPE(t) ((t)->type&PO_TILE_TYPE_MASK)
 #define PO_TILE_TMP           0x00000004
 #define PO_TILE_SYNTHETIC     0x00000008
+#define PO_TILE_VARIABLE      0x00000010
 
-#define PO_TILE_FLAGS         0x0000000C /* Invariable tile type info */
+#define PO_TILE_FLAGS         0x0000001C /* Invariable tile type info */
 
 struct _potash_tile;
 struct _potash_layer; /* From layer.h */

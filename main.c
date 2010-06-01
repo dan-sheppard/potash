@@ -86,9 +86,9 @@ int main(int argc,char **argv) {
 	po_stack_layer_add(stack,y2,po_stack_compose_normal,255);	
 	
 	layer=po_stack_layer(stack);
-	t0=po_layer_get_tile(layer,0,0);
+	t0=po_layer_get_tile(layer,0,0,PO_TILE_RDONLY);
 	pod_tile_debug(t0,"test3");
-	po_layer_put_tile(t0);
+	po_layer_put_tile(layer,t0);
 	
 	surface=cairo_image_surface_create(CAIRO_FORMAT_ARGB32,500,500);
 	cr=cairo_create(surface);
@@ -105,10 +105,10 @@ int main(int argc,char **argv) {
 	po_layer_print(y2,surface,100,100,po_stack_compose_normal,255);	
 	for(j=0;j<5;j++)
 		for(i=0;i<5;i++) {
-			t0=po_layer_get_tile(layer,i,j);
+			t0=po_layer_get_tile(layer,i,j,PO_TILE_RDONLY);
 			fn=g_strdup_printf("rec-%d-%d",i,j);
 			pod_tile_debug(t0,fn);
-			po_layer_put_tile(t0);
+			po_layer_put_tile(layer,t0);
 			g_free(fn);
 		}	
 	cairo_surface_destroy(surface);

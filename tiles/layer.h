@@ -15,6 +15,8 @@ struct potash_matrix {
 	potash_tile * tiles;
 };
 
+struct potash_layer_list;
+
 typedef struct _potash_layer {
 	/* Metadata */
 	potash_tiles tiles;
@@ -23,18 +25,31 @@ typedef struct _potash_layer {
 	gpointer maker_data;
 	GDestroyNotify maker_free;
 
+	/* Dirty lists */
+	struct potash_layer_list *dirties,*is_dirtied_by;
+
 	/* Store */
 	struct potash_matrix matrix;
 } * potash_layer;
+
+struct potash_layer_list {
+	potash_layer layer;
+	struct potash_layer_list *next;
+};
 
 potash_layer po_layer_create(potash_tiles ts,int tile_flags,
 									  potash_tile_maker maker,gpointer maker_data,
 									  GDestroyNotify maker_free);
 void po_layer_destroy(potash_layer);
-potash_tile po_layer_get_tile(potash_layer,int,int);
-void po_layer_put_tile(potash_tile t);
+potash_tile po_layer_get_tile(potash_layer,int x,int y,int mode);
+void po_layer_put_tile(potash_layer,potash_tile t);
+void po_layer_flush_tile(potash_layer,int,int);
+
+void po_layer_dirties(potash_layer dirties,potash_layer dirtier);
 
 void po_layer_print(potash_layer,cairo_surface_t *,gint64 x,gint64 y,
 						  potash_stack_compose,guint32);
+
+void pod_layer_debug(potash_layer);
 
 #endif

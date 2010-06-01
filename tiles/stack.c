@@ -19,7 +19,7 @@ static void stack_maker(potash_tiles tiles,int x,int y,
 	g_debug("Reconstructing stack surface at (%d,%d) ",x,y);
 	for(i=0;i<stack->size;i++) {
 		g_debug("Handling layer %d",i);
-		tsrc=po_layer_get_tile(stack->stack[i].layer,x,y);
+		tsrc=po_layer_get_tile(stack->stack[i].layer,x,y,PO_TILE_RDONLY);
 		tmixed=po_tile_create(tiles,0,0,PO_TILE_TMP,po_tmaker_copy,
 									 po_tile_surface(tsrc));
 		po_cairo_util_fade_alpha(po_tile_surface(tmixed),stack->stack[i].alpha);
@@ -27,7 +27,7 @@ static void stack_maker(potash_tiles tiles,int x,int y,
 		(*stack->stack[i].compose)(surface,src,x,y,0,0,0,0,
 											cairo_image_surface_get_width(src),
 											cairo_image_surface_get_height(src));
-		po_layer_put_tile(tsrc);
+		po_layer_put_tile(stack->stack[i].layer,tsrc);
 		po_tile_unref(tmixed);
 		po_tile_destroy(tmixed);
 	}
@@ -41,8 +41,7 @@ potash_stack po_stack_create(potash_tiles tiles) {
 	stack->len=0;
 	stack->size=0;
 	stack->tiles=tiles;
-	stack->layer=po_layer_create(tiles,PO_TILE_SYNTHETIC|PO_TILE_VARIABLE,
-										  stack_maker,stack,0);
+	stack->layer=po_layer_create(tiles,PO_TILE_SYNTHETIC,stack_maker,stack,0);
 	return stack;
 }
 
@@ -69,6 +68,7 @@ void po_stack_layer_add(potash_stack stack,
 	el->layer=layer;
 	el->compose=compose;
 	el->alpha=alpha;
+	po_layer_dirties(stack->layer,layer);
 }
 
 potash_layer po_stack_layer(potash_stack stack) {

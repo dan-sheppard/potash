@@ -89,6 +89,7 @@ potash_tile po_tile_create(potash_tiles ts,int x,int y,int flags,
 	g_debug("Creating");
 	(t->constructor)(t->tiles,x,y,t->surface,t->surface_data,t->payload);
 	t->type|=(flags&PO_TILE_FLAGS);
+	t->type|=PO_TILE_RDWR;
 	return t;
 }
 
@@ -235,15 +236,24 @@ static void prune_cache(potash_tiles ts,int limit) {
 	}
 }
 
-void po_tile_destroy(potash_tile t) {
+void po_tile_flush(potash_tile t) {
+	g_debug("flush type=%8.8X",t->type);
 	if(PO_TILE_TYPE(t)==PO_TILE_TYPE_LOCKED)
 		po_tile_unlock(t);
 	if(PO_TILE_TYPE(t)==PO_TILE_TYPE_LOADED)
 		po_tile_unload(t);
+	g_debug("flush done");
+}
+
+void po_tile_destroy(potash_tile t) {
+	po_tile_flush(t);
 	g_free(t);
 }
 
-void po_tile_ref(potash_tile t) {
+void po_tile_ref(potash_tile t,int mode) {
+	/* We don't actually use mode at the bottom yet, but it's useful in
+	 * wrapping functions for invalidation.
+	 */
 	if(t->type&PO_TILE_TMP)
 		g_error("Cannot ref tmp tile");
 	if(PO_TILE_TYPE(t)==PO_TILE_TYPE_UNLOADED) {
@@ -253,6 +263,8 @@ void po_tile_ref(potash_tile t) {
 		g_debug("Already loaded tile");
 	if(PO_TILE_TYPE(t)!=PO_TILE_TYPE_LOCKED)
 		po_tile_lock(t);
+	t->type&=~PO_TILE_MODES;
+	t->type|=(mode&PO_TILE_MODES);
 }
 
 void po_tile_unref(potash_tile t) {
@@ -260,6 +272,10 @@ void po_tile_unref(potash_tile t) {
 	if(t->type&PO_TILE_TMP || t->type&PO_TILE_VARIABLE)
 		po_tile_unload(t);	
 	prune_cache(t->tiles,t->tiles->cache_size);
+}
+
+gboolean po_tile_ref_is_rdwr(potash_tile t) {
+	return !!(t->type&PO_TILE_RDWR);
 }
 
 cairo_surface_t * po_tile_surface(potash_tile t) {

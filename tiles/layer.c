@@ -139,7 +139,7 @@ static int matrix_bounds(struct potash_matrix *matrix,int x,int y,
 			new.tiles[j]=0;
 		for(j=0;j<matrix->y_size;j++)
 			for(i=0;i<matrix->x_size;i++) {
-				new.tiles[matrix_get_offset(&new,i+new.x_offset,j+new.y_offset)]=
+				new.tiles[matrix_get_offset(&new,i+matrix->x_offset,j+matrix->y_offset)]=
 					matrix->tiles[matrix_get_offset(matrix,i+matrix->x_offset,
 															  j+matrix->y_offset)];
 			}
@@ -209,11 +209,19 @@ static void print_tile(potash_tile tile,cairo_surface_t *src,
 	tmp=po_tile_create(tile->tiles,0,0,PO_TILE_TMP,po_tmaker_copy,src);
 	po_cairo_util_fade_alpha(po_tile_surface(tmp),alpha);
 	(*compose)(po_tile_surface(tile),po_tile_surface(tmp),x,y,
-				  dst_origin_x-src_origin_x,dst_origin_y-src_origin_y,
+				  (gint32)dst_origin_x-(gint32)src_origin_x,
+				  (gint32)dst_origin_y-(gint32)src_origin_y,
 				  dst_origin_x,dst_origin_y,size_x,size_y);
 	po_tile_unref(tmp);
 	po_tile_destroy(tmp);
 }  
+
+static int tile_of(gint64 in,potash_tiles t) {
+	if(in>0)
+		return in/t->size;
+	else
+		return in/t->size-1;
+}
 
 void po_layer_print(potash_layer dst,cairo_surface_t *src,
 						  gint64 xo,gint64 yo,
@@ -227,11 +235,11 @@ void po_layer_print(potash_layer dst,cairo_surface_t *src,
 	g_debug("Writing tiles");
 	xs=cairo_image_surface_get_width(src);
 	ys=cairo_image_surface_get_height(src);
-	for(j=yo/dst->tiles->size;j<=(yo+ys-1)/dst->tiles->size;j++)
-		for(i=xo/dst->tiles->size;i<=(xo+xs-1)/dst->tiles->size;i++) {
+	for(j=tile_of(yo,dst->tiles);j<=tile_of(yo+ys-1,dst->tiles);j++)
+		for(i=tile_of(xo,dst->tiles);i<=tile_of(xo+xs-1,dst->tiles);i++) {
 			g_debug("Writing to tile (%d,%d)",i,j);
-			dst_base_x=i*dst->tiles->size;
-			dst_base_y=j*dst->tiles->size;
+			dst_base_x=i*(gint64)dst->tiles->size;
+			dst_base_y=j*(gint64)dst->tiles->size;
 			dst_origin_x=(guint32)MAX(0,xo-dst_base_x);
 			dst_origin_y=(guint32)MAX(0,yo-dst_base_y);
 			src_origin_x=(guint32)MAX(0,dst_base_x-xo);
@@ -243,10 +251,63 @@ void po_layer_print(potash_layer dst,cairo_surface_t *src,
 			if(dst_base_y+size_y>yo+ys)
 				size_y=(guint32)(yo+ys-dst_base_y);
 			tile=po_layer_get_tile(dst,i,j,PO_TILE_RDWR);
-			print_tile(tile,src,src_origin_x,i,j,
+			print_tile(tile,src,i,j,src_origin_x,
 						  src_origin_y,dst_origin_x,dst_origin_y,size_x,size_y,
 						  compose,alpha);
 			po_layer_put_tile(dst,tile);
+		}
+}
+
+static void develop_tile(cairo_surface_t *dst,potash_tile tile,
+							  guint32 src_origin_x,guint32 src_origin_y,
+							  guint32 dst_origin_x,guint32 dst_origin_y,
+							  guint32 size_x,guint32 size_y) {
+	cairo_surface_t *src;
+	cairo_t *cr;
+
+	g_debug("src=[(%d,%d)x(%d,%d)] dst=[(%d,%d)x(%d,%d)]",
+			  src_origin_x,src_origin_y,size_x,size_y,
+			  dst_origin_x,dst_origin_y,size_x,size_y);	
+	src=po_tile_surface(tile);
+	cr=cairo_create(dst);
+	cairo_set_source_surface(cr,src,(double)dst_origin_x-(double)src_origin_x,
+									 (double)dst_origin_y-(double)src_origin_y);
+	cairo_rectangle(cr,dst_origin_x,dst_origin_y,size_x,size_y);
+	cairo_fill(cr);
+	cairo_destroy(cr);
+}
+
+void po_layer_develop(cairo_surface_t *dst,potash_layer src,
+							 gint64 x_orig,gint64 y_orig,
+							 guint32 x_surface,guint32 y_surface,
+							 guint32 x_size,guint32 y_size) {
+	int i,j;
+	gint64 tile_base_x,tile_base_y;
+	guint32 tile_size_x,tile_size_y,tile_orig_x,tile_orig_y,dst_x,dst_y;
+	potash_tile tile;
+	
+	for(j=tile_of(y_orig,src->tiles);j<=tile_of(y_orig+y_size-1,src->tiles);j++)
+		for(i=tile_of(x_orig,src->tiles);i<=tile_of(x_orig+x_size-1,src->tiles);i++) {
+			g_debug("Exposing tile (%d,%d)",i,j);
+			tile_base_x=i*(gint64)src->tiles->size;
+			tile_base_y=j*(gint64)src->tiles->size;
+			g_debug("Base (%ld,%ld)",tile_base_x,tile_base_y);
+			tile_orig_x=(guint32)MAX(0,x_orig-tile_base_x);
+			tile_orig_y=(guint32)MAX(0,y_orig-tile_base_y);
+			g_debug("Tile orig (%d,%d)",tile_orig_x,tile_orig_y);
+			dst_x=x_surface+(tile_orig_x+tile_base_x-x_orig);
+			dst_y=y_surface+(tile_orig_y+tile_base_y-y_orig);	
+			tile_size_x=src->tiles->size-tile_orig_x;
+			if(tile_base_x+tile_size_x>x_orig+x_size)
+				tile_size_x=(guint32)(x_orig+x_size-tile_base_x);
+			tile_size_y=src->tiles->size-tile_orig_y;
+			if(tile_base_y+tile_size_y>y_orig+y_size)
+				tile_size_y=(guint32)(y_orig+y_size-tile_base_y);
+			tile=po_layer_get_tile(src,i,j,PO_TILE_RDONLY);
+			develop_tile(dst,tile,tile_orig_x,tile_orig_y,dst_x,dst_y,
+							 tile_size_x,tile_size_y);
+			pod_tile_debug(tile,"t4");
+			po_layer_put_tile(src,tile);			
 		}
 }
 

@@ -20,7 +20,7 @@ int main(int argc,char **argv) {
 	gchar *fn;
 
 	cd=po_confdir_setup(".potash");
-	tiles=po_tiles_create(cd,256,4);
+	tiles=po_tiles_create(cd,256,128);
 #if 0
 	t0=po_tile_create(tiles,0,0,0,po_tmaker_opaque_white,0);
 	pod_tile_scribble(t0,1);
@@ -103,15 +103,21 @@ int main(int argc,char **argv) {
 	cairo_fill(cr);
 	cairo_destroy(cr);
 	po_layer_print(y2,surface,100,100,po_stack_compose_normal,255);	
-	for(j=0;j<5;j++)
-		for(i=0;i<5;i++) {
-			t0=po_layer_get_tile(layer,i,j,PO_TILE_RDONLY);
-			fn=g_strdup_printf("rec-%d-%d",i,j);
-			pod_tile_debug(t0,fn);
-			po_layer_put_tile(layer,t0);
-			g_free(fn);
-		}	
 	cairo_surface_destroy(surface);
+	/**/
+	surface=cairo_image_surface_create(CAIRO_FORMAT_ARGB32,100,100);
+	cr=cairo_create(surface);		
+	cairo_set_source_rgba(cr,1.0,0.0,0.0,0.5);
+	cairo_rectangle(cr,0.0,0.0,100,100);
+	cairo_fill(cr);
+	cairo_destroy(cr);
+	po_layer_print(y2,surface,-70,-70,po_stack_compose_normal,255);	
+	cairo_surface_destroy(surface);	
+	/**/
+	surface=cairo_image_surface_create(CAIRO_FORMAT_ARGB32,600,600);
+	po_layer_develop(surface,layer,-100,-100,100,100,400,400);
+	cairo_surface_write_to_png(surface,"develop.png");
+	cairo_surface_destroy(surface);	
 	
 	po_stack_destroy(stack);
 	po_layer_destroy(y0);

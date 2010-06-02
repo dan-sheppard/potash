@@ -6,18 +6,18 @@
 #include <cairo.h>
 #include "../confdir/confdir.h"
 
+#define PO_TILE_TYPE_MASK     0x00000003 /* Cache status */
+#define PO_TILE_FLAGS         0x0000001C /* Invariable tile type info */
+#define PO_TILE_MODES         0x00000020 /* Lock status */
+
 #define PO_TILE_TYPE_UNLOADED 0x00000001
 #define PO_TILE_TYPE_LOADED   0x00000002
 #define PO_TILE_TYPE_LOCKED   0x00000003
-#define PO_TILE_TYPE_MASK     0x00000003
 #define PO_TILE_TYPE(t) ((t)->type&PO_TILE_TYPE_MASK)
 #define PO_TILE_TMP           0x00000004
 #define PO_TILE_SYNTHETIC     0x00000008
-#define PO_TILE_VARIABLE      0x00000010
+#define PO_TILE_VARIABLE      0x00000010 /* XXX Unused now? */
 #define PO_TILE_RDWR          0x00000020
-
-#define PO_TILE_FLAGS         0x0000001C /* Invariable tile type info */
-#define PO_TILE_MODES         0x00000020
 
 #define PO_TILE_RDWR          0x00000020
 #define PO_TILE_RDONLY        0x00000000
@@ -49,7 +49,7 @@ typedef struct _potash_tile {
    guint32 type;
    guint32 id;
    potash_tiles tiles;
-   guint32 x,y;
+   int x,y;
 
 	/* Cache */
 	int age;

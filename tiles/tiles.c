@@ -105,8 +105,8 @@ void pod_tile_debug(potash_tile t,gchar *base) {
 		g_critical("Bad tile map");
 	if(t->prev_cache && t->prev_cache->next_cache!=t)
 		g_critical("Bad tile map");			
-	fprintf(stderr,"Tile type=%8.8X id=%8.8X filename=%s age=%d\n",
-  		 	  t->type,t->id,image_filename,t->age);
+	fprintf(stderr,"Tile type=%8.8X id=%8.8X filename=%s age=%d x=%d y=%d\n",
+  		 	  t->type,t->id,image_filename,t->age,t->x,t->y);
 	if(PO_TILE_TYPE(t)!=PO_TILE_TYPE_UNLOADED) {
 		g_free(image_filename);
 	}
@@ -237,12 +237,10 @@ static void prune_cache(potash_tiles ts,int limit) {
 }
 
 void po_tile_flush(potash_tile t) {
-	g_debug("flush type=%8.8X",t->type);
 	if(PO_TILE_TYPE(t)==PO_TILE_TYPE_LOCKED)
 		po_tile_unlock(t);
 	if(PO_TILE_TYPE(t)==PO_TILE_TYPE_LOADED)
 		po_tile_unload(t);
-	g_debug("flush done");
 }
 
 void po_tile_destroy(potash_tile t) {

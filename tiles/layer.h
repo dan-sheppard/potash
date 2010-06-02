@@ -50,6 +50,11 @@ void po_layer_dirties(potash_layer dirties,potash_layer dirtier);
 void po_layer_print(potash_layer,cairo_surface_t *,gint64 x,gint64 y,
 						  potash_stack_compose,guint32);
 
+void po_layer_develop(cairo_surface_t *,potash_layer,
+							 gint64 x_orig,gint64 y_orig,
+							 guint32 x_surface,guint32 y_surface,
+							 guint32 x_size,guint32 y_size);
+
 void pod_layer_debug(potash_layer);
 
 #endif

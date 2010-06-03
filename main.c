@@ -5,10 +5,159 @@
 #include "tiles/stack.h"
 #include "tiles/stack_composers.h"
 #include "confdir/confdir.h"
+#include "vector/int4.h"
+
+void pbuf(vint4 v,unsigned char *in,int n,vint4 w) {
+	int i;
+	
+	fprintf(stderr,"%16.16lX ::: ",v,n);
+	for(i=0;i<n;i++)
+	  fprintf(stderr,"%2.2X ",in[i]);
+	fprintf(stderr," ::: %16.16lX\n",w);
+}
+
+static guint32 r() {
+	guint32 out;
+	
+	return ((rand()&0xFF)<<0)|
+		    ((rand()&0xFF)<<8)|
+		    ((rand()&0xFF)<<16)|
+		    ((rand()&0xFF)<<24);
+}
+
+int main(int argc,char **argv) {
+	vint4 v,w;
+	int i,j;
+	unsigned char buf[5];
+	
+	srand(time(NULL));	
+	
+	PO_SET_FLAG1(v,3);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_FLAG1(v,7);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_FLAG2(v,5,42);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+	
+	PO_SET_EOF(v);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+	
+	PO_SET_NUMBER(v,0);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);		
+
+	PO_SET_NUMBER(v,127);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);		
+
+	PO_SET_NUMBER(v,128);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,8191);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,8192);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,262143);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,262144);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,2097151);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,2097152);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+
+	PO_SET_NUMBER(v,0xFFFFFFFF);
+	i=po_int4_encode(buf,v);
+	po_int4_decode(buf,&w);
+	pbuf(v,buf,i,w);
+	
+	for(j=0;j<100000000;j++) {
+		PO_SET_NUMBER(v,r());
+		i=po_int4_encode(buf,v);
+		po_int4_decode(buf,&w);
+		if(v!=w)
+			g_error("Mismatch1 %16.16X",v);
+		if(!(j%1000000))
+			pbuf(v,buf,i,w);
+	}
+	for(j=0;j<100000000;j++) {
+		PO_SET_NUMBER(v,r()%300000);
+		i=po_int4_encode(buf,v);
+		po_int4_decode(buf,&w);
+		if(v!=w)
+			g_error("Mismatch1 %16.16X",v);
+		if(!(j%1000000))
+			pbuf(v,buf,i,w);
+	}
+	for(j=0;j<100000000;j++) {
+		PO_SET_NUMBER(v,r()%10000);
+		i=po_int4_encode(buf,v);
+		po_int4_decode(buf,&w);
+		if(v!=w)
+			g_error("Mismatch1 %16.16X",v);
+		if(!(j%1000000))
+			pbuf(v,buf,i,w);
+	}
+	for(j=0;j<100000000;j++) {
+		PO_SET_NUMBER(v,r()%300);
+		i=po_int4_encode(buf,v);
+		po_int4_decode(buf,&w);
+		if(v!=w)
+			g_error("Mismatch1 %16.16X",v);
+		if(!(j%1000000))
+			pbuf(v,buf,i,w);
+	}
+	for(j=0;j<100000000;j++) {
+		PO_SET_FLAG1(v,r()%8);
+		i=po_int4_encode(buf,v);
+		po_int4_decode(buf,&w);
+		if(v!=w)
+			g_error("Mismatch2 %16.16X",v);
+	}
+	for(j=0;j<100000000;j++) {
+		PO_SET_FLAG2(v,r()%7,r()%128);
+		i=po_int4_encode(buf,v);
+		po_int4_decode(buf,&w);
+		if(v!=w)
+			g_error("Mismatch3 %16.16X %16.16X",v,w);
+	}
+
+}
 
 /* TODO something faster than PNG for tiles */
 
-int main(int argc,char **argv) {
+int old_main(int argc,char **argv) {
    potash_confdir cd;
 	potash_tiles tiles;
 	potash_tile t0,t1,t2,tile[100];

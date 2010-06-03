@@ -1,6 +1,7 @@
 CC=gcc
 OBJS=tiles/tiles.o tiles/layer.o tiles/stack.o tiles/tiles_makers.o \
-	tiles/stack_composers.o tiles/cairo_util.o confdir/confdir.o main.o
+	tiles/stack_composers.o tiles/cairo_util.o confdir/confdir.o main.o \
+	vector/int4.o
 CFLAGS=`pkg-config --cflags gtk+-2.0` -g
 LDFLAGS=`pkg-config --libs gtk+-2.0`
 
@@ -37,5 +38,7 @@ tiles/tiles_makers.o: tiles/tiles_makers.h tiles/tiles.h
 tiles/stack_composers.o: tiles/stack_composers.h
 tiles/cairo_util.o: tiles/cairo_util.h
 confdir/confdir.o: confdir/confdir.h
+vector/int4.o: vector/int4.h
+
 
 

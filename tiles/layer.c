@@ -291,10 +291,8 @@ void po_layer_develop(cairo_surface_t *dst,potash_layer src,
 			g_debug("Exposing tile (%d,%d)",i,j);
 			tile_base_x=i*(gint64)src->tiles->size;
 			tile_base_y=j*(gint64)src->tiles->size;
-			g_debug("Base (%ld,%ld)",tile_base_x,tile_base_y);
 			tile_orig_x=(guint32)MAX(0,x_orig-tile_base_x);
 			tile_orig_y=(guint32)MAX(0,y_orig-tile_base_y);
-			g_debug("Tile orig (%d,%d)",tile_orig_x,tile_orig_y);
 			dst_x=x_surface+(tile_orig_x+tile_base_x-x_orig);
 			dst_y=y_surface+(tile_orig_y+tile_base_y-y_orig);	
 			tile_size_x=src->tiles->size-tile_orig_x;

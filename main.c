@@ -6,6 +6,7 @@
 #include "tiles/stack_composers.h"
 #include "confdir/confdir.h"
 #include "vector/int4.h"
+#include "vector/pfile.h"
 
 void pbuf(vint4 v,unsigned char *in,int n,vint4 w) {
 	int i;
@@ -25,7 +26,57 @@ static guint32 r() {
 		    ((rand()&0xFF)<<24);
 }
 
+static void pb_read(struct potash_buffer *pb) {
+	int v;
+	
+	v=pb->data[pb->offset++];
+	fprintf(stderr,"{offset=%d len=%d size=%d} -> %2.2X\n",pb->offset,pb->len,pb->size,v);
+}
+
 int main(int argc,char **argv) {
+	potash_pfile pf;
+	struct potash_buffer *pb;
+	gint64 off0,off1;
+	vint4 v0;
+	
+	pf=po_pfile_open("test.ash",POTASH_PFILE_RDWR|POTASH_PFILE_CREATE|POTASH_PFILE_TRUNCATE);
+	off0=po_pfile_get_pos(pf);
+	g_debug("off0=%ld",off0);
+	PO_SET_NUMBER(v0,42);
+	po_pfile_put(pf,v0);
+	off1=po_pfile_get_pos(pf);
+	g_debug("off1=%ld",off1);
+	PO_SET_NUMBER(v0,4242);
+	po_pfile_put(pf,v0);
+	PO_SET_NUMBER(v0,42424);
+	po_pfile_put(pf,v0);
+	PO_SET_NUMBER(v0,424242);
+	po_pfile_put(pf,v0);
+	PO_SET_NUMBER(v0,42424242);
+	po_pfile_put(pf,v0);
+	PO_SET_FLAG2(v0,4,42);
+	po_pfile_put(pf,v0);
+	po_pfile_set_pos(pf,off1);
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d",v0,PO_GET_NUMBER(v0));
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d",v0,PO_GET_NUMBER(v0));
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d",v0,PO_GET_NUMBER(v0));
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d",v0,PO_GET_NUMBER(v0));
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d/%d",v0,PO_GET_FLAG_INDEX(v0),PO_GET_FLAG2_VALUE(v0));
+	po_pfile_set_pos(pf,off0);
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d",v0,PO_GET_NUMBER(v0));
+	v0=po_pfile_get(pf);
+	g_debug("Got %16.16lX %d",v0,PO_GET_NUMBER(v0));
+	po_pfile_close(pf);
+}
+
+#if 0
+int another_main(int argc,char **argv) {
 	vint4 v,w;
 	int i,j;
 	unsigned char buf[5];
@@ -154,6 +205,7 @@ int main(int argc,char **argv) {
 	}
 
 }
+#endif
 
 /* TODO something faster than PNG for tiles */
 

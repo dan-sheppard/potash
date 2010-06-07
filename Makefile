@@ -1,7 +1,7 @@
 CC=gcc
 OBJS=tiles/tiles.o tiles/layer.o tiles/stack.o tiles/tiles_makers.o \
 	tiles/stack_composers.o tiles/cairo_util.o confdir/confdir.o main.o \
-	vector/int4.o vector/pfile.o
+	vector/int4.o vector/pfile.o vector/precord.o
 CFLAGS=`pkg-config --cflags gtk+-2.0` -g
 LDFLAGS=`pkg-config --libs gtk+-2.0`
 
@@ -26,7 +26,7 @@ profile:
 	rm -r profile
 
 # dependencies
-main.o: tiles/tiles.h tiles/layer.h tiles/stack.h tiles/tiles_makers.h tiles/stack_composers.h confdir/confdir.h
+main.o: tiles/tiles.h tiles/layer.h tiles/stack.h tiles/tiles_makers.h tiles/stack_composers.h confdir/confdir.h vector/precord.h
 tiles/tiles.o: tiles/tiles.h tiles/tiles_makers.h
 tiles/layer.h: tiles/tiles.h
 tiles/layer.o: tiles/layer.h tiles/tiles_makers.h
@@ -41,6 +41,5 @@ confdir/confdir.o: confdir/confdir.h
 vector/int4.o: vector/int4.h
 vector/pfile.h: vector/int4.h
 vector/pfile.o: vector/pfile.h vector/int4.h
-
-
-
+vector/precord.h: vector/int4.h vector/pfile.h
+vector/precrod.o: vector/int4.h vector/pfile.h vector/precord.h

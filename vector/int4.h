@@ -47,7 +47,7 @@
 typedef guint64 vint4;
 
 #define PO_GET_NUMBER(x) ((guint32)((x)&PO_NUMBER))
-#define PO_SET_NUMBER(x,y) do { (x)=PO_TYPE_NUMBER|((y)&PO_NUMBER); } while(0)
+#define PO_NUMBER_VAL(x) ((vint4)(PO_TYPE_NUMBER|((x)&PO_NUMBER)))
 
 #define PO_IS_TYPE_NUMBER(x) (PO_GET_TYPE(x)==PO_TYPE_NUMBER)
 #define PO_IS_TYPE_FLAG1(x) (PO_GET_TYPE(x)==PO_TYPE_FLAG1)
@@ -55,9 +55,13 @@ typedef guint64 vint4;
 #define PO_IS_TYPE_EOF(x) ((x)==PO_TYPE_EOF)
 #define PO_GET_FLAG_INDEX(x) ((guint32)((x)&PO_FLAG_INDEX))
 #define PO_GET_FLAG2_VALUE(x) ((guint32)(((x)&PO_FLAG2_VALUE)>>PO_FLAG2_VALUE_SHIFT))
-#define PO_SET_FLAG1(x,y) do { (x)=PO_TYPE_FLAG1|((y)&PO_FLAG_INDEX); } while(0)
-#define PO_SET_FLAG2(x,y,z) do { (x)=PO_TYPE_FLAG2|((z)<<PO_FLAG2_VALUE_SHIFT)|((y)&PO_FLAG_INDEX); } while(0)
-#define PO_SET_EOF(x) do { (x)=PO_TYPE_EOF; } while(0)
+#define PO_FLAG1_VAL(x) ((vint4)(PO_TYPE_FLAG1|((x)&PO_FLAG_INDEX)))
+#define PO_FLAG2_VAL(x,y) ((vint4)(PO_TYPE_FLAG2|((y)<<PO_FLAG2_VALUE_SHIFT)|((x)&PO_FLAG_INDEX)))
+#define PO_EOF_VAL PO_TYPE_EOF
+
+/* Internal to ffwd/rev routines */
+#define PO_FLAG1_BYTE(x) ((unsigned char)(0xF0|(x)))
+#define PO_FLAG2_BYTE(x) ((unsigned char)(0xF8|(x)))
 
 /* Must have at least five bytes left in buffer */
 int po_int4_encode(guint8 *buffer,vint4 data);

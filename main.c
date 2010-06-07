@@ -1,4 +1,7 @@
 #include <stdlib.h>
+
+#include <glib.h>
+
 #include "tiles/tiles.h"
 #include "tiles/tiles_makers.h"
 #include "tiles/layer.h"
@@ -7,6 +10,7 @@
 #include "confdir/confdir.h"
 #include "vector/int4.h"
 #include "vector/pfile.h"
+#include "vector/precord.h"
 
 void pbuf(vint4 v,unsigned char *in,int n,vint4 w) {
 	int i;
@@ -33,7 +37,39 @@ static void pb_read(struct potash_buffer *pb) {
 	fprintf(stderr,"{offset=%d len=%d size=%d} -> %2.2X\n",pb->offset,pb->len,pb->size,v);
 }
 
+/* XXX rev/ffwd */
+/* XXX open and close pf in ps */
 int main(int argc,char **argv) {
+	potash_pfile pf;
+	potash_pstream ps;
+	potash_precord pr;
+	gint64 off1;
+	
+	pf=po_pfile_open("test.ash",POTASH_PFILE_RDWR|POTASH_PFILE_CREATE|POTASH_PFILE_TRUNCATE);
+	ps=po_pstream_create(pf);
+	pr=po_precord_create(42);
+	po_pstream_add_record(ps,pr);
+	po_precord_destroy(pr);
+	po_pstream_destroy(ps);
+	po_pfile_close(pf);
+	pf=po_pfile_open("test.ash",POTASH_PFILE_RDWR);	
+	g_debug("good %d",po_pfile_ffwd(pf,PRECORD_HEADBODY));
+	off1=po_pfile_get_pos(pf);
+	g_debug("off1=%ld",off1);
+	g_debug("good %d",po_pfile_rev(pf,PRECORD_RECORD_REGULAR));
+	off1=po_pfile_get_pos(pf);
+	g_debug("off1=%ld",off1);
+	g_debug("bad %d",po_pfile_ffwd(pf,PRECORD_SEP_TRIVIAL));
+	off1=po_pfile_get_pos(pf);
+	g_debug("off1=%ld",off1);
+	g_debug("bad %d",po_pfile_rev(pf,PRECORD_SEP_TRIVIAL));
+	off1=po_pfile_get_pos(pf);
+	g_debug("off1=%ld",off1);
+	po_pfile_close(pf);
+}
+
+#if 0
+int third_main(int argc,char **argv) {
 	potash_pfile pf;
 	struct potash_buffer *pb;
 	gint64 off0,off1;
@@ -42,19 +78,19 @@ int main(int argc,char **argv) {
 	pf=po_pfile_open("test.ash",POTASH_PFILE_RDWR|POTASH_PFILE_CREATE|POTASH_PFILE_TRUNCATE);
 	off0=po_pfile_get_pos(pf);
 	g_debug("off0=%ld",off0);
-	PO_SET_NUMBER(v0,42);
+	v0=PO_NUMBER_VAL(42);
 	po_pfile_put(pf,v0);
 	off1=po_pfile_get_pos(pf);
 	g_debug("off1=%ld",off1);
-	PO_SET_NUMBER(v0,4242);
+	v0=PO_NUMBER_VAL(4242);
 	po_pfile_put(pf,v0);
-	PO_SET_NUMBER(v0,42424);
+	v0=PO_NUMBER_VAL(42424);
 	po_pfile_put(pf,v0);
-	PO_SET_NUMBER(v0,424242);
+	v0=PO_NUMBER_VAL(424242);
 	po_pfile_put(pf,v0);
-	PO_SET_NUMBER(v0,42424242);
+	v0=PO_NUMBER_VAL(42424242);
 	po_pfile_put(pf,v0);
-	PO_SET_FLAG2(v0,4,42);
+	v0=PO_FLAG2_VAL(4,42);
 	po_pfile_put(pf,v0);
 	po_pfile_set_pos(pf,off1);
 	v0=po_pfile_get(pf);
@@ -329,3 +365,5 @@ int old_main(int argc,char **argv) {
 	po_confdir_destroy(cd,FALSE);
 	return 0;
 }
+
+#endif

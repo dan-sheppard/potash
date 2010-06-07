@@ -1,4 +1,5 @@
 #define _FILE_OFFSET_BITS 64
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,35 +15,8 @@
 #define VINT4MAX       5
 #define BUFFER_SIZE   12 /* XXX small to try to trigger errors */
 
-/* pretty sure this is always zero, but let's be nice */
-static off_t start_of_file(int fd,gboolean *err) {
-	off_t was,out;
-	
-	*err=FALSE;
-	/* save old position */
-	was=lseek(fd,0L,SEEK_CUR);
-	if(was==(off_t)-1) {
-		*err=TRUE;
-		return was;
-	}
-	/* seek to start */
-	out=lseek(fd,0L,SEEK_SET);
-	if(out==(off_t)-1) {
-		*err=TRUE;
-		return was;
-	}
-	/* restore position */
-	was=lseek(fd,was,SEEK_SET);
-	if(was==(off_t)-1) {
-		*err=TRUE;
-		return was;
-	}
-	return out;	
-}
-
 static struct potash_buffer * buffer_create(int fd) {
 	struct potash_buffer *pb;
-	gboolean err;
 	
 	pb=g_new(struct potash_buffer,1);
 	pb->fd=fd;
@@ -50,12 +24,7 @@ static struct potash_buffer * buffer_create(int fd) {
 	pb->size=BUFFER_SIZE;
 	pb->len=0;
 	pb->offset=0;
-	pb->base_offset=start_of_file(fd,&err);
-	if(err) {
-		g_free(pb->data);
-		g_free(pb);
-		return 0;
-	}	
+	pb->base_offset=0L;
 	return pb;
 }
 
@@ -251,21 +220,21 @@ vint4 po_pfile_get(potash_pfile pf) {
 	int n;
 
 	if(po_pfile_error(pf)) {
-		PO_SET_EOF(out);
+		out=PO_EOF_VAL;
 		return out;
 	}
 	set_state(pf,POTASH_PFILE_RDSTATE);
 	if(po_pfile_error(pf)) {
-		PO_SET_EOF(out);
+		out=PO_EOF_VAL;
 		return out;
 	}
 	if(!buffer_read_ensure(pf->rdbuf,VINT4MAX)) {
 		pf_err_close(pf);
-		PO_SET_EOF(out);
+		out=PO_EOF_VAL;
 		return out;		
 	}
 	if(po_pfile_error(pf)) {
-		PO_SET_EOF(out);
+		out=PO_EOF_VAL;
 		return out;
 	}
 	n=po_int4_decode(pf->rdbuf->data+pf->rdbuf->offset,&out);
@@ -289,4 +258,125 @@ void po_pfile_put(potash_pfile pf,vint4 in) {
 		return;
 	n=po_int4_encode(pf->wrbuf->data+pf->wrbuf->len,in);
 	pf->wrbuf->len+=n;
+}
+
+#define SPOOL_BUFFER 8 /* XXX small to try to exercise bugs */
+
+static void spool_jump(potash_pfile pf,unsigned char * buffer,int *n,off_t *offset,gboolean rev) {
+	off_t old_offset,new;
+	int r,c;
+
+	/* Where do we want to seek to? */
+	old_offset=*offset;
+	if(rev)
+		*offset-=SPOOL_BUFFER;
+	else
+		*offset+=SPOOL_BUFFER;
+	if(*offset<0)
+		*offset=0;
+	g_debug("seeking to %ld",*offset);
+	/* Try it */
+	*n=abs((*offset)-old_offset);
+	if(!*n)
+		return;
+	new=lseek(pf->fd,*offset,SEEK_SET);
+	if(new==(off_t)-1) {
+		if(errno==EINVAL && !rev) {
+			*n=0; /* No more data */
+			return;
+		}
+		pf_err_close(pf);
+		return;
+	}
+	/* Fill buffer */
+	c=0;
+	while(c<SPOOL_BUFFER) {
+		r=read(pf->fd,buffer+c,SPOOL_BUFFER-c);
+		if(r==-1) {
+			pf_err_close(pf);
+			return;
+		}
+		c+=r;
+		if(!r) {
+			*n=c;
+			return;
+		}
+	}
+}
+
+gboolean spool(potash_pfile pf,vint4 flag,gboolean rev) {
+	unsigned char byte;
+	off_t orig,offset,jump;
+	unsigned char * buffer;
+	int i,n,j;
+
+	/* Which byte? */
+	if(po_pfile_error(pf))
+		return FALSE;
+	if(PO_IS_TYPE_FLAG1(flag))
+		byte=PO_FLAG1_BYTE(flag);
+	else if(PO_IS_TYPE_FLAG2(flag))
+		byte=PO_FLAG2_BYTE(flag);
+	else
+		return FALSE;		
+	/* Find it */
+	buffer=g_new(unsigned char,SPOOL_BUFFER);
+	set_state(pf,0);
+	offset=lseek(pf->fd,0L,SEEK_CUR);
+	orig=offset;
+	if(!rev)
+		offset+=SPOOL_BUFFER; /* Re-subtracted in following reverse jump */
+	spool_jump(pf,buffer,&n,&offset,TRUE);
+	if(po_pfile_error(pf)) {
+		g_free(buffer);
+		return FALSE;
+	}
+	while(n) {
+		/* Search for it */
+		j=-1;
+		if(rev) {
+			for(i=0;i<n;i++)
+				if(buffer[n-1-i]==byte) {
+					j=n-1-i;
+					break;
+				}
+		} else {
+			for(i=0;i<n;i++)
+				if(buffer[i]==byte) {
+					j=i;
+					break;
+				}
+		}
+		if(j!=-1) {
+			/* Found it */
+			g_free(buffer);
+			jump=lseek(pf->fd,offset+j,SEEK_SET);
+			if(jump==(off_t)-1) {
+				pf_err_close(pf);
+				return FALSE;
+			}
+			return TRUE;
+		}
+		/* Try again */
+		spool_jump(pf,buffer,&n,&offset,rev);
+		if(po_pfile_error(pf)) {
+			g_free(buffer);
+			return FALSE;
+		}
+	}	
+	g_free(buffer);
+	jump=lseek(pf->fd,orig,SEEK_SET);
+	if(jump==(off_t)-1) {
+		pf_err_close(pf);
+		return FALSE;
+	}	
+	return FALSE;
+}
+
+gboolean po_pfile_ffwd(potash_pfile pf,vint4 flag) {
+	return spool(pf,flag,FALSE);
+}
+
+gboolean po_pfile_rev(potash_pfile pf,vint4 flag) {
+	return spool(pf,flag,TRUE);
 }

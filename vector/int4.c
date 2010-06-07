@@ -46,32 +46,32 @@ int po_int4_decode(guint8 *buffer,vint4 *number) {
 	
 	b[0]=buffer[offset++];
 	if(!(b[0]&0x80)) {
-		PO_SET_NUMBER(*number,b[0]);
+		*number=PO_NUMBER_VAL(b[0]);
 	} else if((b[0]&0xC0)==0x80) {
 		b[1]=buffer[offset++];
-		PO_SET_NUMBER(*number,b[1]|((b[0]&0x3F)<<7));
+		*number=PO_NUMBER_VAL(b[1]|((b[0]&0x3F)<<7));
 	} else if((b[0]&0xF0)==0xC0) {
 		b[1]=buffer[offset++];
 		b[2]=buffer[offset++];	
-		PO_SET_NUMBER(*number,b[2]|(b[1]<<7)|((b[0]&0x0F)<<14));
+		*number=PO_NUMBER_VAL(b[2]|(b[1]<<7)|((b[0]&0x0F)<<14));
 	} else if((b[0]&0xF0)==0xD0) {
 		b[1]=buffer[offset++];
 		b[2]=buffer[offset++];	
 		b[3]=buffer[offset++];	
-		PO_SET_NUMBER(*number,b[3]|(b[2]<<7)|(b[1]<<14)|((b[0]&0x0F)<<21));
+		*number=PO_NUMBER_VAL(b[3]|(b[2]<<7)|(b[1]<<14)|((b[0]&0x0F)<<21));
 	} else if((b[0]&0xF0)==0xE0) {
 		b[1]=buffer[offset++];
 		b[2]=buffer[offset++];	
 		b[3]=buffer[offset++];	
 		b[4]=buffer[offset++];	
-		PO_SET_NUMBER(*number,b[4]|(b[3]<<7)|(b[2]<<14)|(b[1]<<21)|((b[0]&0x0F)<<28));
+		*number=PO_NUMBER_VAL(b[4]|(b[3]<<7)|(b[2]<<14)|(b[1]<<21)|((b[0]&0x0F)<<28));
 	} else if((b[0]&0xF8)==0xF0) {
-		PO_SET_FLAG1(*number,b[0]&0x07);
+		*number=PO_FLAG1_VAL(b[0]&0x07);
 	} else if((b[0]&0xF8)==0xF8 && b[0]!=0xFF) {
 		b[1]=buffer[offset++];
-		PO_SET_FLAG2(*number,b[0]&0x07,b[1]);
+		*number=PO_FLAG2_VAL(b[0]&0x07,b[1]);
 	} else {
-		PO_SET_EOF(*number);
+		*number=PO_EOF_VAL;
 	}
 	return offset;
 }

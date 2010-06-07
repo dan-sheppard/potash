@@ -50,4 +50,7 @@ void po_pfile_set_pos(potash_pfile,gint64);
 gboolean po_pfile_error(potash_pfile);
 int po_pfile_errno(potash_pfile pf);
 
+gboolean po_pfile_ffwd(potash_pfile,vint4 flag);
+gboolean po_pfile_rev(potash_pfile,vint4 flag);
+
 #endif
